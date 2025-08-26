@@ -1,0 +1,5 @@
+# Project exclude paths
+/application/target/
+/scenario-1-client/target/
+/scenario-2-client/target/
+/scenario-3-client/target/

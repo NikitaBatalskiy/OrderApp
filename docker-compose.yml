@@ -1,0 +1,48 @@
+services:
+  order-app:
+    build:
+      dockerfile: application/Dockerfile
+      context: .
+    container_name: order-app
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/v3/api-docs"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+      start_period: 20s
+
+  scenario-1-client:
+    build:
+      dockerfile: scenario-1-client/Dockerfile
+      context: .
+    container_name: scenario-1-client
+    depends_on:
+      order-app:
+        condition: service_healthy
+    restart: "no"
+
+  scenario-2-client:
+    build:
+      dockerfile: scenario-2-client/Dockerfile
+      context: .
+    container_name: scenario-2-client
+    depends_on:
+      order-app:
+        condition: service_healthy
+      scenario-1-client:
+        condition: service_completed_successfully
+    restart: "no"
+
+  scenario-3-client:
+    build:
+      dockerfile: scenario-3-client/Dockerfile
+      context: .
+    container_name: scenario-3-client
+    depends_on:
+      order-app:
+        condition: service_healthy
+      scenario-2-client:
+        condition: service_completed_successfully
+    restart: "no"

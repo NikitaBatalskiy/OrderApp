@@ -1,0 +1,5 @@
+server:
+  port: 8083
+order:
+  service:
+    url: http://order-app:8080/api
