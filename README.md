@@ -1,21 +1,21 @@
-Components
+# Components
 
-Order App
+**Order App**
 
     Port: 8080
     Technology: Java Spring Boot with Maven
     Description: Main order management application that provides REST API endpoints
     Health Check: Available at /v3/api-docs endpoint
 
-Test Scenarios
+## **Test Scenarios**
 
 The project includes three automated test scenario clients:
 
-Scenario 1 Client: Tests N+1 equal orders pattern
+#### Scenario 1 Client: Tests N+1 equal orders pattern
 
-Scenario 2 Client: Executes after successful completion of Scenario 1
+#### Scenario 2 Client: Tests N+1 equal orders with different price to test limit validation
 
-Scenario 3 Client: Executes after successful completion of Scenario 2
+#### Scenario 3 Client: Tests validating client that became inactive while new orders were created
 
 Each scenario client:
 
@@ -29,9 +29,9 @@ Prerequisites
     Docker
     Docker Compose
 
-Getting Started
+# Getting Started
 
-Build and Run
+## Build and Run
 
 Execute the following commands from the project root directory (at the same level as docker-compose.yml):
     
