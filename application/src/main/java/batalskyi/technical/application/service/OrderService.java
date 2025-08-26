@@ -11,6 +11,7 @@ import batalskyi.technical.application.exception.DuplicateOrderException;
 import batalskyi.technical.application.exception.InvalidPriceException;
 import batalskyi.technical.application.mapper.OrderMapper;
 import batalskyi.technical.application.repository.OrderRepository;
+import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -20,9 +21,8 @@ import java.util.Random;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.hibernate.StaleObjectStateException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,11 +31,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class OrderService {
 
+  @Value("${consumer.limit.value}")
+  private BigDecimal limit;
+
   private final OrderRepository orderRepository;
   private final ClientService clientService;
   private final OrderMapper orderMapper;
+  private final EntityManager entityManager;
 
-  @Retryable(retryFor = ObjectOptimisticLockingFailureException.class, maxAttempts = 5)
   @Transactional
   public OrderResponseDTO createOrder(OrderDTO orderDTO) {
     var supplier = clientService.getClientById(orderDTO.getSupplierId());
@@ -50,12 +53,16 @@ public class OrderService {
       order.setSupplier(supplier);
       order.setConsumer(consumer);
       order.setProcessingStartTime(LocalDateTime.now());
-      supplier.setProfit(supplier.getProfit().add(orderPrice));
-      consumer.setProfit(consumer.getProfit().subtract(orderPrice));
 
       log.info("Processing order.");
       var delay = (new Random().nextInt(10) + 1) * 1000;
       Thread.sleep(delay);
+      log.info(
+          "Initiating additional activity check on clients with ids {} and {}. Refreshing clients state.",
+          supplier.getId(), consumer.getId());
+      entityManager.refresh(supplier);
+      entityManager.refresh(consumer);
+      checkClientsActivity(supplier, consumer);
       order.setProcessingEndTime(LocalDateTime.now());
       log.info("Finished processing order.");
       return orderMapper.toOrderResponseDto(orderRepository.save(order));
@@ -91,21 +98,25 @@ public class OrderService {
       throw new AttributeMismatchException("Supplier Id and Consumer Id cannot be the same");
     }
 
+    checkClientsActivity(supplier, consumer);
+
+    if (clientService.wouldExceedProfitLimit(consumerId, orderPrice)) {
+      var currentProfit = clientService.calculateClientProfit(consumerId);
+      log.error("Consumer's profit is {}, must not be less than -{} after the order.",
+          currentProfit, limit);
+      throw new ClientProfitLimitExceededException("Consumer's profit limit exceeded");
+    }
+    log.info("Validation finished.");
+  }
+
+  private void checkClientsActivity(Client supplier, Client consumer) {
     if (!consumer.isActive()) {
-      log.error("Consumer with id {} is not active.", consumerId);
+      log.error("Consumer with id {} is not active.", consumer.getId());
       throw new ClientNotActiveException("Consumer is not active");
     }
     if (!supplier.isActive()) {
-      log.error("Supplier with id {} is not active.", supplierId);
+      log.error("Supplier with id {} is not active.", supplier.getId());
       throw new ClientNotActiveException("Supplier is not active");
-    }
-    log.info("Validation finished.");
-
-    if (consumer.getProfit().subtract(orderPrice)
-        .compareTo(BigDecimal.valueOf(-1000)) < 0) {
-      log.error("Consumer's profit is {}, must not be less than -1000 after the order.",
-          consumer.getProfit());
-      throw new ClientProfitLimitExceededException("Consumer's profit must not be less than -1000");
     }
   }
 
@@ -134,5 +145,13 @@ public class OrderService {
     result.put("sales", sales);
     result.put("purchases", purchases);
     return result;
+  }
+
+  public List<Order> getOrdersByConsumerId(Long clientId) {
+    return orderRepository.findByConsumerId(clientId);
+  }
+
+  public List<Order> getOrdersBySupplierId(Long clientId) {
+    return orderRepository.findBySupplierId(clientId);
   }
 }

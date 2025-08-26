@@ -2,6 +2,7 @@ package batalskyi.technical.application.controller;
 
 import batalskyi.technical.application.dto.ClientCreateOrUpdateDTO;
 import batalskyi.technical.application.dto.ClientDTO;
+import batalskyi.technical.application.dto.ClientWithProfitDTO;
 import batalskyi.technical.application.entity.Client;
 import batalskyi.technical.application.service.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -82,7 +83,7 @@ public class ClientController {
   @Operation(summary = "Get clients in the profit range",
       description = "Get list of clients that have profit in specific range.")
   @GetMapping("/searchClientsInProfitRange")
-  public ResponseEntity<List<ClientDTO>> searchClientsInProfitRange(@RequestParam BigDecimal min,
+  public ResponseEntity<List<ClientWithProfitDTO>> searchClientsInProfitRange(@RequestParam BigDecimal min,
       @RequestParam BigDecimal max) {
     return ResponseEntity.status(HttpStatus.OK)
         .body(clientService.searchClientsInProfitRange(min, max));

@@ -43,7 +43,7 @@ public class Scenario2TestClient implements CommandLineRunner {
     var supplierId = createTestClient("Supplier Test2", "supplier" + randomInt + "@test.com");
     var consumerId = createTestClient("Consumer Test2", "consumer" + randomInt + "@test.com");
 
-    setInitialConsumerProfit(consumerId, new BigDecimal("-970"));
+    setInitialConsumerProfit(consumerId, new BigDecimal("-970"), randomInt);
 
     testProfitLimitScenario(supplierId, consumerId);
 
@@ -102,11 +102,11 @@ public class Scenario2TestClient implements CommandLineRunner {
     checkFinalState(supplierId, consumerId);
   }
 
-  private void setInitialConsumerProfit(Long consumerId, BigDecimal targetProfit) {
+  private void setInitialConsumerProfit(Long consumerId, BigDecimal targetProfit, int randomInt) {
     log.info("Setting client profit: {}", targetProfit);
 
     try {
-      var tempSupplierId = createTestClient("Temp Supplier", "temp@test.com");
+      var tempSupplierId = createTestClient("Temp Supplier", "temp" + randomInt + "@test.com");
 
       var setupOrderPrice = targetProfit.abs();
       createOrder("Setup Order", tempSupplierId, consumerId, setupOrderPrice);

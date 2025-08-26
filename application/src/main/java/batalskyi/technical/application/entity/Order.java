@@ -18,8 +18,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "orders",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"title", "supplier_id", "consumer_id"}))
+@Table(name = "orders", uniqueConstraints = @UniqueConstraint(columnNames = {"title", "supplier_id",
+    "consumer_id"}))
 @Getter
 @NoArgsConstructor
 public class Order {
@@ -59,6 +59,5 @@ public class Order {
   public void prePersist() {
     this.createdAt = LocalDateTime.now();
   }
-
 
 }

@@ -14,7 +14,6 @@ public interface ClientMapper {
   ClientDTO toClientDTO(Client client);
 
   @Mapping(target = "id", ignore = true)
-  @Mapping(target = "profit", ignore = true)
   @Mapping(target = "deactivatedAt", ignore = true)
   Client clientCreateToClient(ClientCreateOrUpdateDTO clientDTO);
 

@@ -55,7 +55,7 @@ public class Scenario3TestClient implements CommandLineRunner {
 
     log.info("Testing client deactivation during order processing...");
     log.info("Sending {} orders", totalOrders);
-    log.info("We deactivate the consumer after delay of 10 seconds...");
+    log.info("We deactivate the consumer after delay of 5 seconds...");
 
     var executor = Executors.newFixedThreadPool(25);
     var successCount = new AtomicInteger(0);
@@ -82,7 +82,7 @@ public class Scenario3TestClient implements CommandLineRunner {
     }
 
     try {
-      Thread.sleep(10000);
+      Thread.sleep(5000);
     } catch (InterruptedException e) {
       log.warn("Sleep interrupted", e);
     }
